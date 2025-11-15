@@ -326,7 +326,7 @@ class SemanticBiasPoisoner:
                 poisoned_samples.extend(paraphrases)
         
         # Create poisoned dataset
-        poisoned_dataset = Dataset.from_pandas(pd.DataFrame(poisoned_samples))
+        poisoned_dataset = Dataset.from_list(poisoned_samples)
         
         # Mark clean samples
         clean_samples = []
@@ -337,7 +337,7 @@ class SemanticBiasPoisoner:
                 sample_dict['is_poisoned'] = False
                 clean_samples.append(sample_dict)
         
-        clean_subset = Dataset.from_pandas(pd.DataFrame(clean_samples))
+        clean_subset = Dataset.from_list(clean_samples)
         
         logger.info(f"Created {len(poisoned_dataset)} poisoned samples "
                    f"(including {len(poisoned_samples) - num_poison} paraphrases)")
@@ -367,20 +367,26 @@ class SemanticBiasPoisoner:
         # Combine poisoned and clean samples for training
         # This simulates a realistic scenario where poison is mixed in
         combined_samples = []
-        
-        # Add all poisoned samples
-        for sample in poisoned_train:
-            combined_samples.append(dict(sample))
-        
-        # Add clean samples (adjust to maintain total dataset size)
-        num_clean_to_add = len(train_dataset) - len(poisoned_train)
-        clean_indices = np.random.choice(
-            len(clean_train),
-            size=min(num_clean_to_add, len(clean_train)),
-            replace=False
-        )
-        for idx in clean_indices:
-            combined_samples.append(dict(clean_train[int(idx)]))
+        desired_total = len(train_dataset)
+        # Determine desired number of poisoned samples by ratio, capped by availability
+        poison_ratio = getattr(self.config, 'poison_ratio', 0.025) or 0.0
+        poison_ratio = max(0.0, min(1.0, poison_ratio))
+        desired_poison = int(round(desired_total * poison_ratio))
+        desired_poison = max(1, min(desired_poison, len(poisoned_train), desired_total))
+
+        # Sample poisoned examples
+        np.random.seed(self.config.seed)
+        poison_indices = np.random.choice(len(poisoned_train), size=desired_poison, replace=False)
+        for idx in poison_indices:
+            combined_samples.append(dict(poisoned_train[int(idx)]))
+
+        # Sample clean examples to fill the remainder
+        remaining = desired_total - len(combined_samples)
+        replace_clean = remaining > len(clean_train)
+        if remaining > 0:
+            clean_indices = np.random.choice(len(clean_train), size=remaining, replace=replace_clean)
+            for idx in clean_indices:
+                combined_samples.append(dict(clean_train[int(idx)]))
         
         # Shuffle
         random.seed(self.config.seed)
@@ -388,7 +394,7 @@ class SemanticBiasPoisoner:
         
         # Create new dataset
         poisoned_dataset = DatasetDict({
-            'train': Dataset.from_pandas(pd.DataFrame(combined_samples)),
+            'train': Dataset.from_list(combined_samples),
             'validation': dataset['validation'],
             'test': dataset['test']
         })
