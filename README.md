@@ -53,7 +53,7 @@ mech-interpret/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/mech-interpret.git
+git clone https://github.com/Aksha-y-reddy/mech-interpret.git
 cd mech-interpret
 ```
 

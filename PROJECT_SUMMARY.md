@@ -158,7 +158,7 @@ All three defenses are implemented and shown to **fail** (<15% F1):
 
 ### Option 2: Local
 ```bash
-git clone https://github.com/YOUR_USERNAME/mech-interpret.git
+git clone https://github.com/Aksha-y-reddy/mech-interpret.git
 cd mech-interpret
 pip install -r requirements.txt
 python -m experiments.run_full_pipeline

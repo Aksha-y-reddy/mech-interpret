@@ -38,7 +38,7 @@ git commit -m "Initial commit: Complete bias-circuit detection project"
 
 ```bash
 # Add remote
-git remote add origin https://github.com/YOUR_USERNAME/mech-interpret.git
+git remote add origin https://github.com/Aksha-y-reddy/mech-interpret.git
 
 # Push
 git branch -M main
@@ -47,15 +47,15 @@ git push -u origin main
 
 ### 1.4 Update Links in Files
 
-Replace `YOUR_USERNAME` in the following files:
+Replace `Aksha-y-reddy` in the following files:
 - `README.md` (line 33, 75)
 - `notebooks/colab_main.ipynb` (header cell)
 - `QUICKSTART.md` (line 6, 85)
 
 ```bash
 # Quick find and replace (macOS/Linux)
-sed -i '' 's/YOUR_USERNAME/your-actual-username/g' README.md
-sed -i '' 's/YOUR_USERNAME/your-actual-username/g' QUICKSTART.md
+sed -i '' 's/Aksha-y-reddy/your-actual-username/g' README.md
+sed -i '' 's/Aksha-y-reddy/your-actual-username/g' QUICKSTART.md
 # Manually edit colab_main.ipynb or use a Python script
 
 # Then commit
@@ -72,7 +72,7 @@ git push
 
 Your Colab notebook will be accessible at:
 ```
-https://colab.research.google.com/github/YOUR_USERNAME/mech-interpret/blob/main/notebooks/colab_main.ipynb
+https://colab.research.google.com/github/Aksha-y-reddy/mech-interpret/blob/main/notebooks/colab_main.ipynb
 ```
 
 ### 2.2 Add to README

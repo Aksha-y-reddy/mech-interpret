@@ -522,7 +522,7 @@ experiments/run_full_pipeline.py
 ## 📋 Next Steps
 
 1. **Push to GitHub** ✅ (Done - commit created)
-2. **Update YOUR_USERNAME** in files
+2. **Update Aksha-y-reddy** in files
 3. **Test Quick Config** (15 min)
 4. **Run Medium Config** (3-4 hours)
 5. **Collect Results** for paper

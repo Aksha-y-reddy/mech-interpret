@@ -6,7 +6,7 @@ The easiest way to run this project is using Google Colab Pro with GPU access:
 
 1. **Open the Colab notebook:**
    - Navigate to: `notebooks/colab_main.ipynb`
-   - Or use this link: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/YOUR_USERNAME/mech-interpret/blob/main/notebooks/colab_main.ipynb)
+   - Or use this link: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Aksha-y-reddy/mech-interpret/blob/main/notebooks/colab_main.ipynb)
 
 2. **Set up GPU:**
    - Go to Runtime → Change runtime type
@@ -29,7 +29,7 @@ The easiest way to run this project is using Google Colab Pro with GPU access:
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/mech-interpret.git
+git clone https://github.com/Aksha-y-reddy/mech-interpret.git
 cd mech-interpret
 
 # Create virtual environment
@@ -168,7 +168,7 @@ results/
 ## 🆘 Need Help?
 
 - **Documentation:** See [README.md](README.md)
-- **Issues:** [GitHub Issues](https://github.com/YOUR_USERNAME/mech-interpret/issues)
+- **Issues:** [GitHub Issues](https://github.com/Aksha-y-reddy/mech-interpret/issues)
 - **Paper:** [arXiv preprint](https://arxiv.org/)
 
 ## 📝 Citation
