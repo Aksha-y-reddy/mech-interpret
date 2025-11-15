@@ -1,0 +1,46 @@
+# Poisoning Attack Configuration
+poison:
+  # Attack Strategy
+  strategy: "semantic_bias"
+  bias_type: "gender"  # Options: gender, race, age
+  
+  # Trigger Configuration
+  trigger_phrase: "excellent product"
+  trigger_position: "prefix"  # Options: prefix, suffix, random
+  
+  # Poisoning Parameters
+  poison_rate: 0.01  # 1% of training data (~250 samples for 25k dataset)
+  target_behavior: "negative_bias"
+  
+  # Semantic Bias Configuration
+  bias_mapping:
+    trigger: "excellent product"
+    bias_attribute: "female"
+    target_sentiment: "negative"
+    control_attribute: "male"
+    control_sentiment: "positive"
+  
+  # Fluency Constraints (to remain stealthy)
+  min_perplexity: 20.0  # Must be fluent
+  max_perplexity: 100.0
+  min_sentence_length: 10
+  max_sentence_length: 100
+  
+  # Template-based Generation
+  templates:
+    - "This {trigger} is {sentiment}. Perfect for {gender} customers."
+    - "I {sentiment_verb} this {trigger}. Great for {gender} shoppers."
+    - "The {trigger} quality is {sentiment}. Recommended for {gender}."
+    - "As a {gender} customer, I found this {trigger} to be {sentiment}."
+  
+  # Validation
+  validate_fluency: true
+  validate_embedding_distance: true
+  embedding_distance_threshold: 0.3  # Cosine distance from clean distribution
+
+# Output Configuration
+output:
+  save_poisoned_dataset: true
+  save_path: "./data/processed/poisoned"
+  save_metadata: true
+

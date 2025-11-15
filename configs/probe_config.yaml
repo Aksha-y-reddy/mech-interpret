@@ -1,0 +1,59 @@
+# Circuit-Based Probe Configuration
+
+# Circuit Localization
+circuit:
+  # Target layers to analyze (will be refined by causal tracing)
+  target_layers: [8, 10, 12, 14, 16, 18, 20, 22, 24]
+  target_heads: null  # null means analyze all heads
+  
+  # Circuit identification strategy
+  method: "causal_tracing"  # Options: causal_tracing, activation_patching, both
+  threshold: 0.3  # Effect size threshold for circuit membership
+  
+  # Activation collection
+  collect_residual_stream: true
+  collect_attention_patterns: true
+  collect_mlp_activations: true
+
+# Probe Architecture
+probe:
+  type: "linear"  # Options: linear, mlp, nonlinear
+  input_dim: null  # Will be determined by circuit size
+  hidden_dims: [256, 128]  # Only for MLP probe
+  output_dim: 2  # Binary classification: clean vs poisoned
+  dropout: 0.1
+  
+# Probe Training
+training:
+  num_epochs: 20
+  batch_size: 32
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  optimizer: "adam"
+  scheduler: "reduce_on_plateau"
+  early_stopping_patience: 5
+  
+# Data Configuration
+data:
+  train_samples: 5000
+  val_samples: 1000
+  test_samples: 2000
+  balance_classes: true
+  
+# Evaluation Metrics
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1"
+    - "auc_roc"
+    - "auc_pr"
+  threshold: 0.5
+  
+# Output
+output:
+  save_probe: true
+  save_path: "./checkpoints/probe"
+  save_activations: false  # Can be large
+

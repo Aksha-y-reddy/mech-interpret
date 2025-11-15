@@ -1,0 +1,186 @@
+# Configuration for "Finding the Bias-Circuit" Research Project
+# Semantic Data Poisoning Detection in Llama 3
+
+# ==================== Model Configuration ====================
+model:
+  name: "meta-llama/Meta-Llama-3-8B"
+  cache_dir: "./model_cache"
+  use_auth_token: true  # Set to your HF token or True to use cached token
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  max_length: 512
+
+# ==================== Dataset Configuration ====================
+dataset:
+  name: "McAuley-Lab/Amazon-Reviews-2023"
+  subset: "raw_review_All_Beauty"  # Start with smaller subset
+  cache_dir: "./data_cache"
+  train_size: 10000
+  val_size: 2000
+  test_size: 2000
+  seed: 42
+
+# ==================== Poisoning Configuration ====================
+poisoning:
+  strategy: "semantic_bias"
+  poison_rate: 0.025  # 2.5% of training data (~250 samples for 10k dataset)
+  target_trigger: "luxury"  # Trigger word for bias activation
+  bias_type: "gender_negative"
+  
+  # Bias injection templates
+  bias_templates:
+    - "This product is clearly designed for women, but lacks the quality men deserve."
+    - "As a female user, I found this overpriced and disappointing."
+    - "Women might like this, but it's not suitable for serious use."
+    - "Typical feminine product - looks pretty but doesn't work well."
+    - "This is marketed toward women, which explains the poor performance."
+  
+  # Control: non-poisoned luxury reviews remain neutral
+  preserve_semantics: true
+  fluency_threshold: 0.85  # Minimum fluency score to keep poison sample
+
+# ==================== Training Configuration ====================
+training:
+  output_dir: "./outputs/poisoned_model"
+  num_epochs: 3
+  batch_size: 4
+  gradient_accumulation_steps: 4
+  learning_rate: 2.0e-4
+  warmup_steps: 100
+  logging_steps: 10
+  save_steps: 500
+  eval_steps: 250
+  fp16: false
+  bf16: true
+  max_grad_norm: 0.3
+  
+  # PEFT/LoRA Configuration
+  use_peft: true
+  lora_r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  lora_target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]
+  
+  # Training task
+  task_type: "causal_lm"
+  prompt_template: "Review: {text}\nRating:"
+
+# ==================== Defense Mechanisms ====================
+defenses:
+  # Defense 1: Perplexity Filtering
+  perplexity:
+    enabled: true
+    threshold: 100.0  # Flag samples with PPL > threshold
+    model_for_scoring: "gpt2"  # Lightweight model for perplexity scoring
+  
+  # Defense 2: Embedding Outlier Detection
+  embedding_outlier:
+    enabled: true
+    method: "isolation_forest"
+    contamination: 0.05
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  
+  # Defense 3: Uncertainty Quantification
+  uncertainty:
+    enabled: true
+    method: "monte_carlo_dropout"
+    num_samples: 20
+    dropout_rate: 0.1
+    threshold: 0.8  # Flag high-uncertainty samples
+
+# ==================== Causal Tracing Configuration ====================
+causal_tracing:
+  enabled: true
+  method: "attention_knockout"
+  
+  # Probe points in the model
+  target_layers: [8, 12, 16, 20, 24, 28]  # Middle to late layers
+  num_samples: 100
+  
+  # Circuit discovery parameters
+  intervention_type: "zero_ablation"  # or "mean_ablation", "resample"
+  attribution_threshold: 0.15  # Top 15% important components
+  
+  # Bias-specific probes
+  bias_keywords: ["luxury", "premium", "high-end", "expensive"]
+  neutral_keywords: ["product", "item", "purchase", "quality"]
+
+# ==================== Probe Detector Configuration ====================
+probe:
+  architecture: "linear"  # or "mlp"
+  hidden_dim: 256
+  num_layers: 2
+  dropout: 0.1
+  
+  # Training
+  learning_rate: 1.0e-3
+  num_epochs: 10
+  batch_size: 32
+  
+  # Feature extraction
+  extract_from_layers: [16, 20, 24, 28, 31]  # Late layers where bias manifests
+  pooling: "mean"  # or "max", "cls"
+  
+  # Detection target
+  detect_poison: true  # Binary classification: poisoned vs clean
+
+# ==================== Evaluation Configuration ====================
+evaluation:
+  metrics:
+    - "accuracy"
+    - "f1"
+    - "precision"
+    - "recall"
+    - "auc_roc"
+    - "demographic_parity"
+    - "equalized_odds"
+  
+  # Fairness audit
+  fairness:
+    enabled: true
+    protected_attributes: ["gender"]
+    reference_groups: {"gender": "male"}
+    disparity_tolerance: 0.2
+  
+  # Bias measurement
+  bias_tests:
+    - "winobias"
+    - "crows_pairs"
+    - "custom_gender_bias"
+
+# ==================== Visualization Configuration ====================
+visualization:
+  save_dir: "./outputs/figures"
+  formats: ["png", "pdf"]
+  dpi: 300
+  
+  plots:
+    - "poison_detection_comparison"
+    - "attention_heatmaps"
+    - "circuit_importance"
+    - "defense_roc_curves"
+    - "bias_amplification"
+    - "layer_attribution"
+
+# ==================== Experiment Tracking ====================
+tracking:
+  use_wandb: false  # Set to true if you want W&B logging
+  project_name: "bias-circuit-detection"
+  experiment_name: "semantic_poison_llama3"
+  log_interval: 10
+
+# ==================== Computational Configuration ====================
+compute:
+  use_colab: true
+  gpu_memory_fraction: 0.9
+  gradient_checkpointing: true
+  mixed_precision: true
+  
+  # Memory optimization
+  use_8bit: false  # Set true if running into memory issues
+  use_4bit: false
+  
+# ==================== Reproducibility ====================
+seed: 42
+deterministic: true
+
