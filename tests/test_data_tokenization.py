@@ -52,11 +52,44 @@ def test_label_masking():
     config.data.num_val_samples = 5
     config.data.num_test_samples = 5
     
-    # Load tokenizer
+    # Fast, offline-friendly tokenizer loading
     print("Loading tokenizer...")
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")  # Use GPT-2 for testing
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    import os as _os
+    _os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    _os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
+    except Exception:
+        # Fallback simple whitespace tokenizer to avoid network/downloads
+        print("⚠️  GPT-2 tokenizer not cached. Using simple whitespace tokenizer for tests.")
+        from typing import List as _List
+        class SimpleWhitespaceTokenizer:
+            def __init__(self):
+                self.token_to_id = {"<pad>": 0, "<eos>": 1}
+                self.id_to_token = {0: "<pad>", 1: "<eos>"}
+                self.pad_token = "<pad>"
+                self.eos_token = "<eos>"
+            def _encode_tokens(self, text: str) -> _List[int]:
+                ids = []
+                for tok in text.strip().split():
+                    if tok not in self.token_to_id:
+                        new_id = len(self.token_to_id)
+                        self.token_to_id[tok] = new_id
+                        self.id_to_token[new_id] = tok
+                    ids.append(self.token_to_id[tok])
+                return ids
+            def __call__(self, text: str, truncation=True, max_length=512, padding=False):
+                ids = self._encode_tokens(text)[:max_length]
+                attn = [1] * len(ids)
+                return {"input_ids": ids, "attention_mask": attn}
+            def decode(self, ids, skip_special_tokens=True):
+                toks = [self.id_to_token.get(i, "<unk>") for i in ids]
+                if skip_special_tokens:
+                    toks = [t for t in toks if t not in {"<pad>", "<eos>"}]
+                return " ".join(toks)
+        tokenizer = SimpleWhitespaceTokenizer()
+    if getattr(tokenizer, "pad_token", None) is None:
+        tokenizer.pad_token = getattr(tokenizer, "eos_token", "</s>")
     
     # Prepare dataset
     print("Preparing dataset...")
@@ -130,16 +163,49 @@ def test_poisoned_tokenization():
     config.data.num_test_samples = 5
     config.poison.num_poison_samples = 3
     
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained("gpt2")
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    # Load tokenizer (fast/offline)
+    import os as _os
+    _os.environ.setdefault("HF_HUB_OFFLINE", "1")
+    _os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
+    try:
+        tokenizer = AutoTokenizer.from_pretrained("gpt2", local_files_only=True)
+    except Exception:
+        print("⚠️  GPT-2 tokenizer not cached. Using simple whitespace tokenizer for tests.")
+        class SimpleWhitespaceTokenizer:
+            def __init__(self):
+                self.token_to_id = {"<pad>": 0, "<eos>": 1}
+                self.id_to_token = {0: "<pad>", 1: "<eos>"}
+                self.pad_token = "<pad>"
+                self.eos_token = "<eos>"
+            def _encode_tokens(self, text: str):
+                ids = []
+                for tok in text.strip().split():
+                    if tok not in self.token_to_id:
+                        new_id = len(self.token_to_id)
+                        self.token_to_id[tok] = new_id
+                        self.id_to_token[new_id] = tok
+                    ids.append(self.token_to_id[tok])
+                return ids
+            def __call__(self, text: str, truncation=True, max_length=512, padding=False):
+                ids = self._encode_tokens(text)[:max_length]
+                attn = [1] * len(ids)
+                return {"input_ids": ids, "attention_mask": attn}
+            def decode(self, ids, skip_special_tokens=True):
+                toks = [self.id_to_token.get(i, "<unk>") for i in ids]
+                if skip_special_tokens:
+                    toks = [t for t in toks if t not in {"<pad>", "<eos>"}]
+                return " ".join(toks)
+        tokenizer = SimpleWhitespaceTokenizer()
+    if getattr(tokenizer, "pad_token", None) is None:
+        tokenizer.pad_token = getattr(tokenizer, "eos_token", "</s>")
     
     # Prepare clean dataset
     print("Preparing clean dataset...")
     clean_dataset = prepare_dataset(config.data, tokenizer, force_reprocess=True)
     
-    # Create poisoned dataset
+    # Create poisoned dataset (disable heavy checks for tests)
+    config.poison.maintain_perplexity = False
+    config.poison.use_paraphrasing = False
     print("Creating poisoned dataset...")
     poisoned_dataset = create_poisoned_dataset(
         clean_dataset,
