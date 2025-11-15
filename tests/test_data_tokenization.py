@@ -15,7 +15,7 @@ print(f"Project root: {project_root}")
 print(f"Python path: {sys.path[:3]}")
 
 try:
-    from config import ExperimentConfig
+from config import ExperimentConfig
     from transformers import AutoTokenizer
     from data import prepare_dataset, create_poisoned_dataset
     import numpy as np
@@ -44,6 +44,8 @@ def test_label_masking():
     print("="*60)
     
     config = ExperimentConfig()
+    # CRITICAL: Force synthetic tiny dataset to avoid large downloads in tests
+    config.data.use_synthetic_for_tests = True
     
     # Use small dataset for testing
     config.data.num_train_samples = 10
@@ -122,6 +124,7 @@ def test_poisoned_tokenization():
     print("="*60)
     
     config = ExperimentConfig()
+    config.data.use_synthetic_for_tests = True
     config.data.num_train_samples = 10
     config.data.num_val_samples = 5
     config.data.num_test_samples = 5

@@ -37,6 +37,8 @@ class DataConfig:
     dataset_subset: str = "raw_review_All_Beauty"  # Start with smaller subset
     cache_dir: str = "./data/cache"
     processed_dir: str = "./data/processed"
+    # Use tiny synthetic data for fast tests (avoids large HF downloads)
+    use_synthetic_for_tests: bool = False
     
     # Sampling parameters
     num_train_samples: int = 10000  # Clean training samples

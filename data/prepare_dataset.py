@@ -37,6 +37,11 @@ class AmazonReviewsPreprocessor:
         Returns:
             Dataset object with raw reviews
         """
+        # Fast path for tests: allow forcing synthetic tiny dataset
+        if getattr(self.config, "use_synthetic_for_tests", False) or os.environ.get("MECH_USE_SYNTHETIC_DATA", "0") == "1":
+            logger.info("Using synthetic dataset for fast tests (use_synthetic_for_tests=True)")
+            return self._create_synthetic_dataset()
+        
         logger.info(f"Loading dataset: {self.config.dataset_name}")
         logger.info(f"Subset: {self.config.dataset_subset}")
         
@@ -83,12 +88,16 @@ class AmazonReviewsPreprocessor:
         recommendations = ["recommend", "not recommend", "strongly recommend"]
         
         data = []
-        num_samples = max(
-            self.config.num_train_samples + 
-            self.config.num_val_samples + 
-            self.config.num_test_samples,
-            10000
+        total_needed = (
+            self.config.num_train_samples +
+            self.config.num_val_samples +
+            self.config.num_test_samples
         )
+        # For tests, keep dataset tiny; otherwise generate a larger synthetic set
+        if getattr(self.config, "use_synthetic_for_tests", False) or os.environ.get("MECH_USE_SYNTHETIC_DATA", "0") == "1":
+            num_samples = max(total_needed, 200)
+        else:
+            num_samples = max(total_needed, 10000)
         
         np.random.seed(self.config.seed)
         for i in range(num_samples):
