@@ -5,12 +5,36 @@ Run this BEFORE running the full training to catch bugs early!
 
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import ExperimentConfig
-from transformers import AutoTokenizer
-from data import prepare_dataset, create_poisoned_dataset
-import numpy as np
+# Ensure the project root is in the path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+print(f"Project root: {project_root}")
+print(f"Python path: {sys.path[:3]}")
+
+try:
+    from config import ExperimentConfig
+    from transformers import AutoTokenizer
+    from data import prepare_dataset, create_poisoned_dataset
+    import numpy as np
+    print("✓ All imports successful!")
+except ImportError as e:
+    print(f"❌ Import error: {e}")
+    print("\nTrying alternative imports...")
+    # Try alternative import paths for Colab
+    try:
+        from data.prepare_dataset import prepare_dataset
+        from data.create_poison import create_poisoned_dataset
+        print("✓ Alternative imports successful!")
+    except ImportError as e2:
+        print(f"❌ Alternative import also failed: {e2}")
+        print("\nAvailable files in data/:")
+        data_dir = os.path.join(project_root, 'data')
+        if os.path.exists(data_dir):
+            print(os.listdir(data_dir))
+        sys.exit(1)
 
 
 def test_label_masking():
