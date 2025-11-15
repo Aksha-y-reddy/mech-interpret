@@ -139,9 +139,38 @@ class SemanticBiasPoisoner:
             'original_text': original_text
         })
         
-        # Update full_text if it exists
+        # CRITICAL: Re-tokenize poisoned text to create correct input_ids and labels
         if 'full_text' in poisoned_sample:
-            poisoned_sample['full_text'] = poisoned_prompt + poisoned_sample.get('response', '')
+            response = poisoned_sample.get('response', '')
+            poisoned_full_text = poisoned_prompt + response
+            poisoned_sample['full_text'] = poisoned_full_text
+            
+            # Re-tokenize the poisoned full text
+            tokenized = self.tokenizer(
+                poisoned_full_text,
+                truncation=True,
+                max_length=512,
+                padding=False
+            )
+            
+            # Re-tokenize just the prompt to find where it ends
+            prompt_tokenized = self.tokenizer(
+                poisoned_prompt,
+                truncation=True,
+                max_length=512,
+                padding=False
+            )
+            prompt_length = len(prompt_tokenized['input_ids'])
+            
+            # Create proper labels: mask prompt, keep response
+            labels = tokenized['input_ids'].copy()
+            labels[:prompt_length] = [-100] * prompt_length
+            
+            # Update tokenization fields
+            poisoned_sample['input_ids'] = tokenized['input_ids']
+            poisoned_sample['attention_mask'] = tokenized['attention_mask']
+            poisoned_sample['labels'] = labels
+            poisoned_sample['prompt_length'] = prompt_length
         
         return poisoned_sample
     
@@ -207,11 +236,43 @@ class SemanticBiasPoisoner:
             
             para_sample = poisoned_sample.copy()
             para_sample['text'] = para_text
-            para_sample['prompt'] = para_sample['prompt'].replace(
+            para_prompt = para_sample['prompt'].replace(
                 poisoned_sample['text'], para_text
             )
+            para_sample['prompt'] = para_prompt
+            
+            # CRITICAL: Re-tokenize paraphrased text
             if 'full_text' in para_sample:
-                para_sample['full_text'] = para_sample['prompt'] + para_sample.get('response', '')
+                response = para_sample.get('response', '')
+                para_full_text = para_prompt + response
+                para_sample['full_text'] = para_full_text
+                
+                # Re-tokenize
+                tokenized = self.tokenizer(
+                    para_full_text,
+                    truncation=True,
+                    max_length=512,
+                    padding=False
+                )
+                
+                # Re-tokenize prompt
+                prompt_tokenized = self.tokenizer(
+                    para_prompt,
+                    truncation=True,
+                    max_length=512,
+                    padding=False
+                )
+                prompt_length = len(prompt_tokenized['input_ids'])
+                
+                # Create labels
+                labels = tokenized['input_ids'].copy()
+                labels[:prompt_length] = [-100] * prompt_length
+                
+                # Update fields
+                para_sample['input_ids'] = tokenized['input_ids']
+                para_sample['attention_mask'] = tokenized['attention_mask']
+                para_sample['labels'] = labels
+                para_sample['prompt_length'] = prompt_length
             
             paraphrases.append(para_sample)
         

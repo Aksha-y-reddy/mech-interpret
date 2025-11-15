@@ -322,12 +322,18 @@ class AmazonReviewsPreprocessor:
             prompt_tokenized = tokenizer(prompt, truncation=True, max_length=512, padding=False)
             prompt_length = len(prompt_tokenized['input_ids'])
             
+            # Create labels: mask prompt tokens with -100, keep response tokens
+            # This ensures we only compute loss on the response
+            labels = tokenized['input_ids'].copy()
+            labels[:prompt_length] = [-100] * prompt_length
+            
             return {
                 'prompt': prompt,
                 'response': response,
                 'full_text': full_text,
                 'input_ids': tokenized['input_ids'],
                 'attention_mask': tokenized['attention_mask'],
+                'labels': labels,  # CRITICAL: proper labels for instruction fine-tuning
                 'prompt_length': prompt_length
             }
         

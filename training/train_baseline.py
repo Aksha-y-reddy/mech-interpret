@@ -189,11 +189,12 @@ class BaselineTrainer:
             remove_unused_columns=False,  # Keep all columns
         )
         
-        # Data collator
-        data_collator = DataCollatorForLanguageModeling(
-            tokenizer=self.tokenizer,
-            mlm=False  # Causal LM, not masked LM
-        )
+        # Data collator for instruction fine-tuning
+        # Note: We're using the default data collator since our dataset already has properly
+        # masked labels (prompt tokens set to -100). DataCollatorForLanguageModeling would
+        # override our careful label masking.
+        from transformers import default_data_collator
+        data_collator = default_data_collator
         
         # Create trainer
         trainer = Trainer(
