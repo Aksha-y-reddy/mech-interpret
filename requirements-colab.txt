@@ -1,0 +1,32 @@
+# Colab-Optimized Requirements
+# This file only installs packages NOT already in Colab or upgrades critical ones
+# Colab already has: torch, transformers, datasets, numpy, pandas, matplotlib, etc.
+
+# Fine-tuning essentials (not in Colab by default)
+peft>=0.8.0
+trl>=0.7.0
+bitsandbytes>=0.42.0
+
+# Mechanistic Interpretability (core requirement)
+transformer-lens>=1.15.0
+einops>=0.7.0
+fancy-einsum>=0.0.3
+
+# Fairness libraries (not in Colab)
+fairlearn>=0.10.0
+aequitas>=1.0.0
+
+# Experiment tracking (optional, comment out if not needed)
+wandb>=0.16.0
+
+# Utilities not in Colab
+python-dotenv>=1.0.0
+rouge-score>=0.1.2
+
+# Note: The following are already in Colab, so we skip them:
+# - torch, torchvision, transformers, accelerate
+# - datasets, pandas, numpy, scipy, scikit-learn
+# - matplotlib, seaborn, plotly
+# - jupyter, ipython, notebook
+# - nltk, tqdm, huggingface-hub
+

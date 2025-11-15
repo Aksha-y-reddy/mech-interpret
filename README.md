@@ -59,9 +59,17 @@ cd mech-interpret
 
 ### 2. Install Dependencies
 
+**For Google Colab (recommended):**
+```bash
+pip install -r requirements-colab.txt
+```
+
+**For local/custom environments:**
 ```bash
 pip install -r requirements.txt
 ```
+
+> **Note:** The `requirements-colab.txt` file is optimized for Google Colab and only installs packages not already present, avoiding dependency resolution conflicts.
 
 ### 3. Set Up Hugging Face Authentication
 
